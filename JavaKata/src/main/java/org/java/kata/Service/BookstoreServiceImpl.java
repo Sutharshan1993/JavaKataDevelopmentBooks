@@ -3,10 +3,14 @@
  */
 package org.java.kata.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.java.kata.Utils.DiscountCalculator;
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,19 +24,51 @@ public class BookstoreServiceImpl implements BookstoreService {
 
 	@Override
 	public double calculateTotalPrice(Map<String, Integer> basket) {
-		List<Integer> quantities = basket.values().stream().filter(q -> q > 0).collect(Collectors.toList());
-		double totalCost = 0.0;
 
-		while (!quantities.isEmpty()) {
-			int uniqueBooks = (int) quantities.stream().filter(q -> q > 0).count();
-			double discount = DiscountCalculator.getDiscount(uniqueBooks);
-			double setPrice = uniqueBooks * BOOK_PRICE;
-			totalCost += setPrice - (setPrice * discount);
+		Map<String, Integer> mutableBasket = new HashMap<>(basket);
+		List<Integer> uniqueSetSizes = getUniqueSetSizes(mutableBasket);
+		// Debug: Output the unique set sizes
+		System.out.println("Unique Set Sizes: " + uniqueSetSizes);
+		double totalPrice = uniqueSetSizes.stream().mapToDouble(this::calculateSetPrice).sum();
 
-			quantities = quantities.stream().map(q -> q > 0 ? q - 1 : 0).filter(q -> q > 0)
-					.collect(Collectors.toList());
+		// Round the final total price to 2 decimal places
+		return Math.round(totalPrice * 100.0) / 100.0;
+	}
+
+	private List<Integer> getUniqueSetSizes(Map<String, Integer> basket) {
+		List<Integer> uniqueSetSizes = new ArrayList<>();
+
+		while (basket.values().stream().anyMatch(count -> count > 0)) {
+			// Create a unique set of books
+			Set<String> uniqueSet = basket.entrySet().stream().filter(entry -> entry.getValue() > 0)
+					.map(Map.Entry::getKey).collect(Collectors.toSet());
+
+			// Debug: Output the current unique set
+			System.out.println("Unique Set: " + uniqueSet);
+			// Add the size of this set to the list
+			uniqueSetSizes.add(uniqueSet.size());
+			// Decrease the count for each book in the set
+			uniqueSet.forEach(book -> {
+				int currentCount = basket.get(book);
+				if (currentCount > 0) {
+					basket.put(book, currentCount - 1);
+				}
+			});
+
+			// Debug: Show the current basket and unique set
+			System.out.println("Basket after forming set: " + basket);
 		}
 
-		return totalCost;
+		return uniqueSetSizes;
+	}
+
+	private double calculateSetPrice(int setSize) {
+		double discount = DiscountCalculator.getDiscount(setSize);
+		double setPrice = setSize * BOOK_PRICE;
+		// Debug: Show the set size and discount applied
+		System.out.println(
+				"Set Size: " + setSize + ", Discount: " + discount + ", Set Price Before Discount: " + setPrice);
+
+		return setPrice * (1 - discount);
 	}
 }
