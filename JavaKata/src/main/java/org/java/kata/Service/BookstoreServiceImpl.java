@@ -27,8 +27,6 @@ public class BookstoreServiceImpl implements BookstoreService {
 
 		Map<String, Integer> mutableBasket = new HashMap<>(basket);
 		List<Integer> uniqueSetSizes = getUniqueSetSizes(mutableBasket);
-		// Debug: Output the unique set sizes
-		System.out.println("Unique Set Sizes: " + uniqueSetSizes);
 		double totalPrice = uniqueSetSizes.stream().mapToDouble(this::calculateSetPrice).sum();
 
 		// Round the final total price to 2 decimal places
@@ -40,11 +38,8 @@ public class BookstoreServiceImpl implements BookstoreService {
 
 		while (basket.values().stream().anyMatch(count -> count > 0)) {
 			// Create a unique set of books
-			Set<String> uniqueSet = basket.entrySet().stream().filter(entry -> entry.getValue() > 0)
-					.map(Map.Entry::getKey).collect(Collectors.toSet());
+			Set<String> uniqueSet = basket.entrySet().stream().filter(entry -> entry.getValue() > 0).map(Map.Entry::getKey).collect(Collectors.toSet());
 
-			// Debug: Output the current unique set
-			System.out.println("Unique Set: " + uniqueSet);
 			// Add the size of this set to the list
 			uniqueSetSizes.add(uniqueSet.size());
 			// Decrease the count for each book in the set
@@ -65,9 +60,6 @@ public class BookstoreServiceImpl implements BookstoreService {
 	private double calculateSetPrice(int setSize) {
 		double discount = DiscountCalculator.getDiscount(setSize);
 		double setPrice = setSize * BOOK_PRICE;
-		// Debug: Show the set size and discount applied
-		System.out.println(
-				"Set Size: " + setSize + ", Discount: " + discount + ", Set Price Before Discount: " + setPrice);
 
 		return setPrice * (1 - discount);
 	}
