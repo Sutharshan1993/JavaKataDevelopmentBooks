@@ -10,4 +10,6 @@ class JavaKataApplicationTests {
 	void contextLoads() {
 	}
 
+	
+	
 }
